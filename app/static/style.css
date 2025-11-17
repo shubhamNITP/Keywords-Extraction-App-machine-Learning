@@ -1,0 +1,33 @@
+body {
+  font-family: Arial;
+  background: #0e0e0e;
+  color: #f2f2f2;
+  display: flex;
+  justify-content: center;
+  align-items: start;
+  padding-top: 40px;
+}
+.container {
+  background: #1b1b1b;
+  padding: 25px;
+  border-radius: 10px;
+  width: 60%;
+}
+textarea {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 16px;
+}
+button {
+  margin-top: 10px;
+  padding: 10px 20px;
+  background-color: #3b82f6;
+  border: none;
+  color: white;
+  border-radius: 8px;
+  cursor: pointer;
+}
+button:hover {
+  background-color: #2563eb;
+}

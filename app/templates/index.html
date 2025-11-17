@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Keyword Extractor</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>🧠 Keyword Extractor</h1>
+    <form method="POST" action="/extract">
+      <textarea name="text" placeholder="Enter paper abstract here..." rows="6" cols="70">{{ text or '' }}</textarea><br>
+      <button type="submit">Extract Keywords</button>
+    </form>
+
+    {% if keywords %}
+      <h2>Extracted Keywords</h2>
+      <ul>
+        {% for k, v in keywords.items() %}
+          <li>{{ k }} — {{ v }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  </div>
+</body>
+</html>
