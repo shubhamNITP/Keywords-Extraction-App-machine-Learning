@@ -1,7 +1,8 @@
 from flask import Flask, request, render_template, jsonify
 import pickle
 import os
-from preprocess import preprocess_text
+from app.preprocess import preprocess_text
+
 
 app = Flask(__name__)
 
