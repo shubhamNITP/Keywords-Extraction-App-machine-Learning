@@ -5,10 +5,13 @@ from nltk.stem.porter import PorterStemmer
 from nltk.tokenize import word_tokenize
 import os
 
+nltk.download('stopwords')
+nltk.download('punkt')
+nltk.download('punkt_tab')
+
 nltk.data.path.append(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'tokenizers'))
 nltk.data.path.append(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'corpora'))
 
-nltk.data.path.append(r"C:\Users\shubh\Documents\FifthSemester\MachineLearning\Project")
 stop_words = set(stopwords.words('english'))
 new_words = ["fig","figure","image","sample","using","show","result","large","also",
              "one","two","three","four","five","six","seven","eight","nine"]
