@@ -1,2 +1,7 @@
-data/*.csv
+models/
+tokenizers/
+corpora/
+data/
 database.sqlite
+*.csv
+*.pkl
