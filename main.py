@@ -21,7 +21,6 @@ df = df.iloc[:5000,:] # Limit to first 5000 rows for performance
 
 # Preprocessing the data 
 
-nltk.data.path.append(r"C:\Users\shubh\Documents\FifthSemester\MachineLearning\Project") # Add custom nltk data path 
 for resource in ["stopwords", "punkt", "punkt_tab"]:
     try:
         nltk.data.find(f"tokenizers/{resource}" if "punkt" in resource else f"corpora/{resource}")
