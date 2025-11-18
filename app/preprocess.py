@@ -1,86 +1,70 @@
 import re
-import nltk
-from nltk.corpus import stopwords
-from nltk.stem.porter import PorterStemmer
-from nltk.tokenize import word_tokenize
-import os
+import spacy
+from spacy.lang.en.stop_words import STOP_WORDS
 
-# Download NLTK resources
-nltk.download('stopwords')
-nltk.download('punkt')
-nltk.download('punkt_tab')
+# Load spaCy model once
+nlp = spacy.load("en_core_web_sm")
 
-# Setup NLTK paths
-nltk.data.path.append(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'tokenizers'))
-nltk.data.path.append(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'corpora'))
-
-# Stopwords
-stop_words = set(stopwords.words('english'))
-new_words = [
+# Add custom stopwords
+CUSTOM_STOP = {
     "fig", "figure", "image", "sample", "using", "show", "result", "large",
     "also", "one", "two", "three", "four", "five", "six", "seven", "eight",
     "nine", "table", "et", "al"
-]
-stop_words = stop_words.union(new_words)
+}
 
-stemmer = PorterStemmer()
+STOPWORDS = STOP_WORDS.union(CUSTOM_STOP)
 
 
-# ------------------------------------------------------
-# CLEANING UTILITIES
-# ------------------------------------------------------
-
+# ---------------------------------------------------------
+# PDF CLEANING
+# ---------------------------------------------------------
 def clean_pdf_text(text):
-    """
-    Fix common PDF text issues before preprocessing.
-    """
 
-    # Remove references like [1], [12], (3), etc.
+    # Remove reference numbers like [1], [12], (3)
     text = re.sub(r"\[\d+\]", " ", text)
     text = re.sub(r"\(\d+\)", " ", text)
 
-    # Remove double hyphen line breaks ("comput-\ner" -> "computer")
+    # Fix hyphenated words split across lines: comput- er → computer
     text = re.sub(r"(\w+)-\s*\n\s*(\w+)", r"\1\2", text)
 
     # Replace newlines with space
     text = text.replace("\n", " ")
 
-    # Remove non-ASCII characters
+    # Remove weird unicode chars
     text = text.encode("ascii", "ignore").decode()
 
-    # Remove multiple spaces
+    # Remove extra spaces
     text = re.sub(r"\s+", " ", text)
 
     return text.strip()
 
 
-# ------------------------------------------------------
-# MAIN PREPROCESS FUNCTION
-# ------------------------------------------------------
-
+# ---------------------------------------------------------
+# MAIN PREPROCESS FUNCTION — spaCy lemmatization
+# ---------------------------------------------------------
 def preprocess_text(text):
-    """
-    Clean + normalize + tokenize + remove stopwords + stem
-    """
 
+    # Step 1: Clean PDF junk
     text = clean_pdf_text(text)
 
-    # Lowercase
-    text = text.lower()
+    # Step 2: spaCy NLP pipeline
+    doc = nlp(text.lower())
 
-    # Remove HTML tags
-    text = re.sub(r"<.*?>", " ", text)
+    tokens = []
+    for token in doc:
 
-    # Keep only alphabets
-    text = re.sub(r"[^a-zA-Z]", " ", text)
+        # Remove stopwords, punctuation, numbers
+        if token.is_stop or token.is_punct or token.like_num:
+            continue
 
-    # Tokenize
-    tokens = word_tokenize(text)
+        lemma = token.lemma_.strip()
 
-    # Remove short words + stopwords
-    tokens = [w for w in tokens if w not in stop_words and len(w) > 3]
+        # Remove short terms & custom stopwords
+        if len(lemma) < 4:
+            continue
+        if lemma in STOPWORDS:
+            continue
 
-    # Stemming
-    tokens = [stemmer.stem(w) for w in tokens]
+        tokens.append(lemma)
 
     return " ".join(tokens)
