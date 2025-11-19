@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: docai
+    env: python
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn app.app:app"
+    plan: free
+    autoDeploy: true
+    region: oregon
+    envVars:
+      PYTHON_VERSION: "3.10"
