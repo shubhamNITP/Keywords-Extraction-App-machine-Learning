@@ -1,11 +1,13 @@
 from flask import Flask, request, render_template, jsonify
 import pickle
 import os
-import fitz
+import pdfplumber
+from io import BytesIO
 from app.preprocess import preprocessing_text  
 
 app = Flask(__name__)
 
+# Paths
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MODEL_DIR = os.path.join(BASE_DIR, "models")
 
@@ -14,22 +16,26 @@ cv = pickle.load(open(os.path.join(MODEL_DIR, "count_vectorizer.pkl"), "rb"))
 tfidf_transformer = pickle.load(open(os.path.join(MODEL_DIR, "tfidf_transformer.pkl"), "rb"))
 feature_names = pickle.load(open(os.path.join(MODEL_DIR, "features_names.pkl"), "rb"))
 
+
 # ---------------- PDF TEXT EXTRACTION ----------------
 def extract_pdf_text(pdf_bytes):
-    doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+    """Extracts text from a PDF file using pdfplumber."""
     full_text = ""
-    for page in doc:
-        full_text += page.get_text("text") + "\n"
+    with pdfplumber.open(BytesIO(pdf_bytes)) as pdf:
+        for page in pdf.pages:
+            text = page.extract_text() or ""
+            full_text += text + "\n"
     return full_text.strip()
 
-# ---------------- KEYWORD EXTRACTION (EXACT COPY OF YOUR LOGIC) ----------------
+
+# ---------------- KEYWORD EXTRACTION ----------------
 def extract_keywords(text, topN=1):
     processed = preprocessing_text(text)
 
     # TF-IDF transform
     tfidf_matrix = tfidf_transformer.transform(cv.transform([processed])).tocoo()
 
-    # sort by score
+    # Sort by score
     tuples = zip(tfidf_matrix.col, tfidf_matrix.data)
     sorted_items = sorted(tuples, key=lambda x: (x[1], x[0]), reverse=True)
 
@@ -44,10 +50,12 @@ def extract_keywords(text, topN=1):
 
     return keywords
 
+
 # ---------------- ROUTES ----------------
 @app.route("/")
 def index():
     return render_template("index.html")
+
 
 @app.route("/extract", methods=["POST"])
 def extract():
@@ -57,7 +65,7 @@ def extract():
 
     results = []
 
-    # Process each uploaded PDF
+    # Process PDF files
     for pdf in pdf_files:
         extracted_text = extract_pdf_text(pdf.read())
         keywords = extract_keywords(extracted_text, top_k)
@@ -67,7 +75,7 @@ def extract():
             "keywords": keywords
         })
 
-    # Manual text (if any)
+    # Process manual text
     if text_input.strip():
         keywords = extract_keywords(text_input, top_k)
         results.append({
@@ -77,14 +85,16 @@ def extract():
 
     return jsonify({"results": results})
 
-# For API users
+
 @app.route("/api/extract", methods=["POST"])
 def api_extract():
     data = request.get_json()
     text = data.get("text", "")
     top_k = int(data.get("top_k", 1))
+
     keywords = extract_keywords(text, top_k)
     return jsonify(keywords)
 
+
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=5000)
