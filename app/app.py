@@ -2,7 +2,7 @@ from flask import Flask, request, render_template, jsonify
 import pickle
 import os
 import fitz
-from preprocess import preprocessing_text  
+from app.preprocess import preprocessing_text  
 
 app = Flask(__name__)
 
